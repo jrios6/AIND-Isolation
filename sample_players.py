@@ -245,6 +245,15 @@ if __name__ == "__main__":
 
     # get a list of the legal moves available to the active player
     print(game.get_legal_moves())
+    print("Blank Spaces")
+    print(game.get_blank_spaces())
+
+    print("Player Location")
+    pl = game.get_player_location(player1)
+    print(pl)
+    print(pl[0])
+    print(pl[1])
+    print(game.to_string())
 
     # get a successor of the current state by making a copy of the board and
     # applying a move. Notice that this does NOT change the calling object

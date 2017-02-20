@@ -51,6 +51,8 @@ def custom_score(game, player):
     return float(own_moves - 2*opp_moves)
 
     """
+
+    """
     #Heuristic 2: Border/Non-Border Differentiated Moves Scoring
     border_moves = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5), (0,6),
                     (1,0), (1,6), (2,0), (2,6), (3,0), (3,6), (4,0),
@@ -62,18 +64,51 @@ def custom_score(game, player):
         if each_move in border_moves:
             own_score = own_score + 1
         else:
-            own_score = own_score + 2
+            own_score = own_score + 1.5
 
     for each_move in game.get_legal_moves(game.get_opponent(player)):
         if each_move in border_moves:
             opp_score = opp_score + 1
         else:
-            opp_score = opp_score + 2
+            opp_score = opp_score + 1.5
+
+    return float(own_score - opp_score)
+    """
+
+    #Heuristic 3: Advanced Differentiated Board scoring
+    border_moves = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5), (0,6),
+                    (1,0), (1,6), (2,0), (2,6), (3,0), (3,6), (4,0),
+                    (4,6), (5,0), (5,6), (6,0), (6,1), (6,2), (6,3),
+                    (6,4), (6,5), (6,6)]
+
+    next_to_border_moves = [(1,1), (1,2), (1,3), (1,4), (1,5), (2,1),
+                            (2,5), (3,1), (3,5), (4,1), (4,5),
+                            (5,1), (5,2), (5,3), (5,4), (5,5)]
+
+    own_score = 0
+    opp_score = 0
+
+    for move in game.get_legal_moves(player):
+        if move in border_moves:
+            own_score += 1
+        elif move in next_to_border_moves:
+            own_score += 1.2
+        else:
+            own_score += 1.5
+
+    for move in game.get_legal_moves(game.get_opponent(player)):
+        if move in border_moves:
+            opp_score += 1
+        elif move in next_to_border_moves:
+            opp_score += 1.2
+        else:
+            opp_score += 1.5
 
     return float(own_score - opp_score)
 
+
 class CustomPlayer:
-    """Game-playing agent that chooses a m`ove using your evaluation function
+    """Game-playing agent that chooses a move using your evaluation function
     and a depth-limited minimax algorithm with alpha-beta pruning. You must
     finish and test this player to make sure it properly uses minimax and
     alpha-beta to return a good move before the search time limit expires.
@@ -148,12 +183,13 @@ class CustomPlayer:
         """
 
         self.time_left = time_left
-        #move = (-1, -1) #Default
+        move = (-1, -1) #Default
 
         # Perform any required initializations, including selecting an initial
         # move from the game board (i.e., an opening book), or returning
         # immediately if there are no legal moves
 
+        max_depth = 0
         try:
             # The search method call (alpha beta or minimax) should happen in
             # here in order to avoid timeout. The try/except block will
@@ -161,11 +197,12 @@ class CustomPlayer:
             # when the timer gets close to expiring
             if self.iterative:
                 #Perform iterative search
-                for depth in range(1,50):
+                num_of_remaining_moves = len(game.get_blank_spaces())
+                for depth in range(1,num_of_remaining_moves):
                     if self.time_left() <= self.TIMER_THRESHOLD:
                         return move
 
-                    if self.method is 'alphabeta':
+                    if self.method == 'alphabeta':
                         iterative_best_score, iterative_best_move = self.alphabeta(game, depth)
                     else:
                         iterative_best_score, iterative_best_move = self.minimax(game, depth)
@@ -173,9 +210,10 @@ class CustomPlayer:
                     #Stores score and move of the deepest search
                     score = iterative_best_score
                     move = iterative_best_move
+                    max_depth = depth
             else:
                 #Perform fixed-depth search
-                if self.method is 'alphabeta':
+                if self.method == 'alphabeta':
                     score, move = self.alphabeta(game, self.search_depth)
                 else:
                     score, move = self.minimax(game, self.search_depth)
@@ -184,7 +222,6 @@ class CustomPlayer:
             # Handle any actions required at timeout, if necessary
             pass
 
-        # Return the best move from the last completed search iteration
         return move
 
 
@@ -231,7 +268,7 @@ class CustomPlayer:
             score = float("inf")
 
         #At bottom of minimax tree
-        if depth is 1:
+        if depth == 1:
             for each_move in legal_moves:
                 new_game = game.forecast_move(each_move)
                 if maximizing_player and self.score(new_game, self) > score:
@@ -308,7 +345,7 @@ class CustomPlayer:
             score = float("inf")
 
         #At bottom of minimax tree
-        if depth is 1:
+        if depth == 1:
             for each_move in legal_moves:
                 new_game = game.forecast_move(each_move)
                 new_score = self.score(new_game, self)
